@@ -10,4 +10,6 @@ def hello_world():
 
 @app.route("/test", methods=['POST'])
 def test():
-    return json.loads(request.data)
+    data1 = json.loads(request.data)
+    print(data1)
+    return data1
