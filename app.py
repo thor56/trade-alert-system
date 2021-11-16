@@ -12,18 +12,36 @@ db = SQLAlchemy(app)
 CORS(app)
 
 
-class User(db.Model):
-    __tablename__ = "users"
+class M12(db.Model):
+    __tablename__ = "minutes"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-    email = db.Column(db.String(255))
+    ticker = db.Column(db.String(255))
+    position = db.Column(db.String(255))
+    timestamp = db.Column(db.Time())
 
-    def __init__(self, name, email):
-        self.name = name
-        self.email = email
+    def __init__(self, ticker, position, timestamp):
+        self.ticker = ticker
+        self.position = position
+        self.timestamp = timestamp
 
     def __repr__(self):
-        return '%s/%s' % (self.name, self.email)
+        return '%s/%s/%s' % (self.ticker, self.position,  self.timestamp)
+
+
+class H3(db.Model):
+    __tablename__ = "hour"
+    id = db.Column(db.Integer, primary_key=True)
+    ticker = db.Column(db.String(255))
+    signal = db.Column(db.String(255))
+    timestamp = db.Column(db.Time())
+
+    def __init__(self, ticker, signal, timestamp):
+        self.ticker = ticker
+        self.signal = signal
+        self.timestamp = timestamp
+
+    def __repr__(self):
+        return '%s/%s/%s' % (self.ticker, self.signal,  self.timestamp)
 
 
 @app.route("/")
@@ -34,12 +52,14 @@ def hello_world():
 @app.route("/test", methods=['POST'])
 def test():
     data = json.loads(request.data)
-    user = User(data['exchange'], data['ticker'])
-    db.session.add(user)
+
+    if 'position' in data:
+        m12 = M12(data['ticker'], data['position'], data['time'])
+        db.session.add(m12)
+    elif 'signal' in data:
+        h3 = H3(data['ticker'], data['signal'], data['time'])
+        db.session.add(h3)
+
     db.session.commit()
 
-    return json.jsonify({
-        'status': 'Data is posted to PostgreSQL!',
-        'name': data['exchange'],
-        'email': data['exchange']
-    })
+    return data
