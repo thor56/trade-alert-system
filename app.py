@@ -28,7 +28,7 @@ class User(db.Model):
 
 @app.route("/")
 def hello_world():
-    return "<p>Hello, World!</p>"
+    return "<p>Hello World!</p>"
 
 
 @app.route("/test", methods=['POST'])
