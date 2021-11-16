@@ -49,7 +49,7 @@ def hello_world():
     return "<p>Hello World!</p>"
 
 
-@app.route("/test", methods=['POST'])
+@app.route("/webhook", methods=['POST'])
 def test():
     data = json.loads(request.data)
 
