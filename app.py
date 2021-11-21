@@ -1,11 +1,13 @@
 from flask import Flask, json, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from datetime import datetime, timedelta
+from sqlalchemy import create_engine
 
 import os
 
 app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost/users"
+# app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost/postgres"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL1")
 
 db = SQLAlchemy(app)
@@ -44,9 +46,12 @@ class H3(db.Model):
         return '%s/%s/%s' % (self.ticker, self.signal,  self.timestamp)
 
 
+engine = create_engine('postgresql://postgres:123@localhost/postgres')
+
 @app.route("/")
 def hello_world():
-    return "<p>Hello World!</p>"
+   
+    return "Hello World!"
 
 
 @app.route("/webhook", methods=['POST'])
@@ -63,3 +68,43 @@ def test():
     db.session.commit()
 
     return data
+
+@app.route("/view")
+def view():
+    minutes_data = M12.query.all()
+    data = []
+    for x in minutes_data:
+        signal = "LONG"
+        if float(x.position) < 0:
+            signal = "SHORT"
+        query = db.session.query(H3).filter(
+            H3.ticker.like(x.ticker),
+            H3.signal.like(signal),
+            H3.timestamp.between(x.timestamp + timedelta(hours=-3), x.timestamp + timedelta(hours=3)))
+        for row in db.session.execute(query).fetchall():
+            data.append(list(row))
+    print(data)
+      
+    
+    
+
+    # results = [
+    # {
+    #     "ticker": m12.ticker,
+    #     "position": m12.position,
+    #     "time": m12.timestamp,
+    #     "c" :  m12.timestamp > datetime.strptime("11-18-2021", '%m-%d-%Y')
+
+    # } for m12 in m121]
+    # qry = DBSession.query(User).filter(User.birthday.between('1985-01-17', '1988-01-17'))
+    
+    # with engine.connect() as con:
+
+    #     rs = con.execute('SELECT * FROM minutes M, hour H where M.ticker = H.ticker and'
+    #     +' M.timestamp between DATEADD(hour,2,H.timestamp) and DATEADD(hour,-2,H.timestamp) ')
+    #     for row in rs:
+    #         print(row)
+    return ""
+
+   
+    
