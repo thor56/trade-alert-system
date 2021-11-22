@@ -1,4 +1,4 @@
-from flask import Flask, json, request
+from flask import Flask, json, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, timedelta
@@ -48,9 +48,10 @@ class H3(db.Model):
 
 engine = create_engine('postgresql://postgres:123@localhost/postgres')
 
+
 @app.route("/")
 def hello_world():
-   
+
     return "Hello World!"
 
 
@@ -69,6 +70,7 @@ def test():
 
     return data
 
+
 @app.route("/view")
 def view():
     minutes_data = M12.query.all()
@@ -77,34 +79,13 @@ def view():
         signal = "LONG"
         if float(x.position) < 0:
             signal = "SHORT"
+
         query = db.session.query(H3).filter(
             H3.ticker.like(x.ticker),
             H3.signal.like(signal),
-            H3.timestamp.between(x.timestamp + timedelta(hours=-3), x.timestamp + timedelta(hours=3)))
+            H3.timestamp.between(x.timestamp + timedelta(minutes=-30), x.timestamp + timedelta(minutes=30)))
         for row in db.session.execute(query).fetchall():
             data.append(list(row))
+
     print(data)
-      
-    
-    
-
-    # results = [
-    # {
-    #     "ticker": m12.ticker,
-    #     "position": m12.position,
-    #     "time": m12.timestamp,
-    #     "c" :  m12.timestamp > datetime.strptime("11-18-2021", '%m-%d-%Y')
-
-    # } for m12 in m121]
-    # qry = DBSession.query(User).filter(User.birthday.between('1985-01-17', '1988-01-17'))
-    
-    # with engine.connect() as con:
-
-    #     rs = con.execute('SELECT * FROM minutes M, hour H where M.ticker = H.ticker and'
-    #     +' M.timestamp between DATEADD(hour,2,H.timestamp) and DATEADD(hour,-2,H.timestamp) ')
-    #     for row in rs:
-    #         print(row)
     return ""
-
-   
-    

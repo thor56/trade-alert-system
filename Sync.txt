@@ -1,0 +1,12 @@
+ add local env variable DATABASE_URL1 = 'postgresql://postgres:123@localhost/postgres'
+
+$env:FLASK_ENV = "development"
+
+heroku pg:backups:capture -a trade-alert-system
+heroku pg:backups:download -a trade-alert-system
+
+heroku pg:psql postgresql-flexible-57290 --app trade-alert-system
+
+C:\Program Files\PostgreSQL\14\data\pg_hba.conf
+
+pg_restore -U postgres -d postgres -1 latest.dump
