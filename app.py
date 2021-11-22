@@ -87,5 +87,5 @@ def view():
         for row in db.session.execute(query).fetchall():
             data.append(list(row))
 
-    print(data)
+    # print(data)
     return ""
