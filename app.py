@@ -1,10 +1,14 @@
+from re import match
 from flask import Flask, json, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine
+import pandas as pd
 
 import os
+from sqlalchemy.engine import create_engine
+
+from sqlalchemy.sql.elements import Case
 
 app = Flask(__name__)
 # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost/postgres"
@@ -70,11 +74,14 @@ def test():
 
     return data
 
+
 @app.route("/view")
 def view():
     minutes_data = M12.query.all()
     data = []
-    result =[]
+    result = []
+    keys = ['Ticker', 'Position', 'Time']
+    _dict = {}
     for x in minutes_data:
         signal = "LONG"
         if float(x.position) < 0:
@@ -86,12 +93,32 @@ def view():
             H3.timestamp.between(x.timestamp + timedelta(minutes=-30), x.timestamp + timedelta(minutes=30)))
         for row in db.session.execute(query).fetchall():
             data.append(list(row))
-            print(row.__dict__)
-        
+
     for i in data:
         if i not in result:
-            result.append(i)
-    # print(result)
-    return render_template('view.html', title='Trades', result = result)
+            str1 = str(i).replace("[", "").replace("]", "")
+            result.append([l for l in str1.split('/')])
 
-    
+    for x in result:
+        z = 1
+        for y in x:
+            if(z == 1):
+                _dict['Ticker'] = y
+                z = z + 1
+            elif(z == 2):
+                _dict['Position'] = y
+                z = z + 1
+            elif(z == 3):
+                _dict['Time'] = y
+
+    books = []
+    with engine.connect() as con:
+        books = con.execute("SELECT H.ticker, H.signal, H.timestamp FROM hour H, minutes M where H.ticker = M.ticker and " +
+                            "CASE " +
+                            "WHEN CAST(M.position AS DECIMAL(7,2)) > CAST(0 AS DECIMAL(7,2)) THEN H.signal = 'LONG' " +
+                            "ELSE H.signal = 'SHORT' " +
+                            "END and " +
+                            "H.timestamp between M.timestamp - INTERVAL '1 hour' and M.timestamp  ")
+
+    print([book for book in books])
+    return render_template('view.html', title='Trades', books=books)
