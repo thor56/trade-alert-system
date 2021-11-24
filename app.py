@@ -1,4 +1,4 @@
-from flask import Flask, json, request, jsonify
+from flask import Flask, json, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, timedelta
@@ -70,11 +70,11 @@ def test():
 
     return data
 
-
 @app.route("/view")
 def view():
     minutes_data = M12.query.all()
     data = []
+    result =[]
     for x in minutes_data:
         signal = "LONG"
         if float(x.position) < 0:
@@ -86,6 +86,12 @@ def view():
             H3.timestamp.between(x.timestamp + timedelta(minutes=-30), x.timestamp + timedelta(minutes=30)))
         for row in db.session.execute(query).fetchall():
             data.append(list(row))
+            print(row.__dict__)
+        
+    for i in data:
+        if i not in result:
+            result.append(i)
+    # print(result)
+    return render_template('view.html', title='Trades', result = result)
 
-    # print(data)
-    return ""
+    
