@@ -15,3 +15,45 @@
     #     +' M.timestamp between DATEADD(hour,2,H.timestamp) and DATEADD(hour,-2,H.timestamp) ')
     #     for row in rs:
     #         print(row)
+
+
+
+
+
+    
+    for i in data:
+        if i not in result:
+            str1 = str(i).replace("[", "").replace("]", "")
+            result.append([l for l in str1.split('/')])
+
+    for x in result:
+        z = 1
+        for y in x:
+            if(z == 1):
+                _dict['Ticker'] = y
+                z = z + 1
+            elif(z == 2):
+                _dict['Position'] = y
+                z = z + 1
+            elif(z == 3):
+                _dict['Time'] = y
+
+
+
+
+minutes_data = M12.query.all()
+    
+    result = []
+    keys = ['Ticker', 'Position', 'Time']
+    _dict = {}
+    for x in minutes_data:
+        signal = "LONG"
+        if float(x.position) < 0:
+            signal = "SHORT"
+
+        query = db.session.query(H3).filter(
+            H3.ticker.like(M12.ticker),
+            H3.signal.like(signal),
+            H3.timestamp.between(x.timestamp + timedelta(minutes=-30), x.timestamp + timedelta(minutes=30)))
+        for row in db.session.execute(query).fetchall():
+            data.append(list(row))
