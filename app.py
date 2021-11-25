@@ -86,5 +86,8 @@ def view():
                             "END and " +
                             "H.timestamp between M.timestamp - INTERVAL '1 hour' and M.timestamp ORDER BY H.timestamp desc ")
 
+    for x in books:
+        if x not in result:
+            result.append(x)
 
-    return render_template('view.html', title='Trades', books=books)
+    return render_template('view.html', title='Trades', books=result)
