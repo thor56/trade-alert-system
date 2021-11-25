@@ -3,6 +3,8 @@ from flask import Flask, json, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from datetime import datetime, timedelta
+from flask_bootstrap import Bootstrap
+
 
 import os
 from sqlalchemy.engine import create_engine
@@ -10,6 +12,7 @@ from sqlalchemy.engine import create_engine
 from sqlalchemy.sql.elements import Case
 
 app = Flask(__name__)
+Bootstrap(app)
 # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost/postgres"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL1")
 
@@ -55,7 +58,7 @@ engine = create_engine( os.environ.get("DATABASE_URL1"))
 @app.route("/")
 def hello_world():
 
-    return "Hello World!"
+    return  render_template('index.html')
 
 
 @app.route("/webhook", methods=['POST'])
@@ -76,6 +79,7 @@ def test():
 
 @app.route("/view")
 def view():
+    
     result = []
     books = []
     with engine.connect() as con:
