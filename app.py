@@ -49,7 +49,7 @@ class H3(db.Model):
         return '%s/%s/%s' % (self.ticker, self.signal,  self.timestamp)
 
 
-engine = create_engine('postgresql://postgres:123@localhost/postgres')
+engine = create_engine( os.environ.get("DATABASE_URL1"))
 
 
 @app.route("/")
