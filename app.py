@@ -52,13 +52,13 @@ class H3(db.Model):
         return '%s/%s/%s' % (self.ticker, self.signal,  self.timestamp)
 
 
-engine = create_engine( os.environ.get("DATABASE_URL1"))
+engine = create_engine(os.environ.get("DATABASE_URL1"))
 
 
 @app.route("/")
 def hello_world():
 
-    return  render_template('index.html')
+    return render_template('index.html')
 
 
 @app.route("/webhook", methods=['POST'])
@@ -79,19 +79,50 @@ def test():
 
 @app.route("/view")
 def view():
-    
-    result = []
-    books = []
+
+    H1Diff = []
+    H1Result = []
+    M30Diff = []
+    M30Result = []
+    H3Diff = []
+    H3Result = []
+    #  1H DIFF
     with engine.connect() as con:
-        books = con.execute("SELECT H.ticker, H.signal, H.timestamp FROM hour H, minutes M where H.ticker = M.ticker and " +
-                            "CASE " +
-                            "WHEN CAST(M.position AS DECIMAL(7,2)) > CAST(0 AS DECIMAL(7,2)) THEN H.signal = 'LONG' " +
-                            "ELSE H.signal = 'SHORT' " +
-                            "END and " +
-                            "H.timestamp between M.timestamp - INTERVAL '1 hour' and M.timestamp ORDER BY H.timestamp desc ")
+        H1Result = con.execute("SELECT H.ticker, H.signal, H.timestamp FROM hour H, minutes M where H.ticker = M.ticker and " +
+                               "CASE " +
+                               "WHEN CAST(M.position AS DECIMAL(7,2)) > CAST(0 AS DECIMAL(7,2)) THEN H.signal = 'LONG' " +
+                               "ELSE H.signal = 'SHORT' " +
+                               "END and " +
+                               "H.timestamp between M.timestamp - INTERVAL '1 hour' and M.timestamp ORDER BY H.timestamp desc ")
 
-    for x in books:
-        if x not in result:
-            result.append(x)
+    for x in H1Result:
+        if x not in H1Diff:
+            H1Diff.append(x)
+    #   30M DIFF
+    with engine.connect() as con:
+        M30Result = con.execute("SELECT H.ticker, H.signal, " +
+                                "CASE WHEN H.timestamp > M.timestamp THEN H.timestamp else M.timestamp END" +
+                                " FROM hour H, minutes M where H.ticker = M.ticker and " +
+                                "CASE WHEN CAST(M.position AS DECIMAL(7,2)) > CAST(0 AS DECIMAL(7,2)) THEN H.signal = 'LONG' " +
+                                "ELSE H.signal = 'SHORT' " +
+                                "END and " +
+                                "H.timestamp between M.timestamp - INTERVAL '30 minutes' and M.timestamp + INTERVAL '30 minutes' ORDER BY H.timestamp desc ")
 
-    return render_template('view.html', title='Trades', books=result)
+    for x in M30Result:
+        if x not in M30Diff:
+            M30Diff.append(x)
+    #   3H DIFF
+    with engine.connect() as con:
+        H3Result = con.execute("SELECT H.ticker, H.signal, " +
+                               "CASE WHEN H.timestamp > M.timestamp THEN H.timestamp else M.timestamp END" +
+                               " FROM hour H, minutes M where H.ticker = M.ticker and " +
+                               "CASE WHEN CAST(M.position AS DECIMAL(7,2)) > CAST(0 AS DECIMAL(7,2)) THEN H.signal = 'LONG' " +
+                               "ELSE H.signal = 'SHORT' " +
+                               "END and " +
+                               "H.timestamp between M.timestamp - INTERVAL '3 hours' and M.timestamp + INTERVAL '3 hours' ORDER BY H.timestamp desc ")
+
+    for x in H3Result:
+        if x not in H3Diff:
+            H3Diff.append(x)
+
+    return render_template('view.html', title='Trades', H1Diff=H1Diff, M30Diff=M30Diff, H3Diff=H3Diff)
