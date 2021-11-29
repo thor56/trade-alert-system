@@ -98,6 +98,7 @@ def view():
     for x in H1Result:
         if x not in H1Diff:
             H1Diff.append(x)
+    C1H = len(H1Diff)
     #   30M DIFF
     with engine.connect() as con:
         M30Result = con.execute("SELECT H.ticker, H.signal, " +
@@ -111,6 +112,8 @@ def view():
     for x in M30Result:
         if x not in M30Diff:
             M30Diff.append(x)
+    C30M = len(M30Diff)
+
     #   3H DIFF
     with engine.connect() as con:
         H3Result = con.execute("SELECT H.ticker, H.signal, " +
@@ -124,5 +127,6 @@ def view():
     for x in H3Result:
         if x not in H3Diff:
             H3Diff.append(x)
+    C3H = len(H3Diff)
 
-    return render_template('view.html', title='Trades', H1Diff=H1Diff, M30Diff=M30Diff, H3Diff=H3Diff)
+    return render_template('view.html', title='Trades', H1Diff=H1Diff, M30Diff=M30Diff, H3Diff=H3Diff, C1H=C1H, C30M=C30M, C3H=C3H)
