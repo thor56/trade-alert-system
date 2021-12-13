@@ -1,9 +1,12 @@
  add local env variable DATABASE_URL1 = 'postgresql://postgres:123@localhost/postgres'
 
+$env:FLASK_APP = "app"
 $env:FLASK_ENV = "development"
 
 heroku pg:backups:capture -a trade-alert-system
 heroku pg:backups:download -a trade-alert-system
+
+ python -m  venv bin/activate.bat
 
 heroku pg:psql postgresql-flexible-57290 --app trade-alert-system
 
