@@ -57,3 +57,9 @@ minutes_data = M12.query.all()
             H3.timestamp.between(x.timestamp + timedelta(minutes=-30), x.timestamp + timedelta(minutes=30)))
         for row in db.session.execute(query).fetchall():
             data.append(list(row))
+
+
+
+
+    with open('data.json', 'w') as f:
+        json.dump(response.content.decode("utf-8"), f)

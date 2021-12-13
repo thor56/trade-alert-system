@@ -24,6 +24,17 @@
     color: #4d7bca;
     background-color: #1c345d;
   }
+  /* Fixed table head */
+
+  .tableFixHead {
+    overflow: auto;
+    height: 100px;
+  }
+  .tableFixHead thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
   .my-custom-scrollbar {
     position: relative;
     overflow: auto;
@@ -72,7 +83,7 @@
             <h3 class="text-white mb-0">THE 30M DIFF ({{ C30M }})</h3>
           </div>
 
-          <div class="table-responsive custom-scrollbar-css">
+          <div class="table-responsive custom-scrollbar-css tableFixHead">
             <table class="table align-items-center table-dark table-flush">
               <thead class="thead-dark">
                 <tr>

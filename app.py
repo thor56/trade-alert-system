@@ -1,15 +1,21 @@
 from re import match
+import re
 from flask import Flask, json, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from datetime import datetime, timedelta
 from flask_bootstrap import Bootstrap
-
-
-import os
+from datetime import datetime, timedelta
 from sqlalchemy.engine import create_engine
-
 from sqlalchemy.sql.elements import Case
+from coinapi_rest_v1.restapi import CoinAPIv1
+from dateutil import parser
+import os
+import requests
+import json
+import pandas as pd
+from customfunctions import get_pivots
+
+
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -127,6 +133,105 @@ def view():
     for x in H3Result:
         if x not in H3Diff:
             H3Diff.append(x)
+
     C3H = len(H3Diff)
 
     return render_template('view.html', title='Trades', H1Diff=H1Diff, M30Diff=M30Diff, H3Diff=H3Diff, C1H=C1H, C30M=C30M, C3H=C3H)
+
+
+@app.route("/getChart")
+def getChart():
+    # url = 'https://rest.coinapi.io/v1/ohlcv/POLONIEX_SPOT_LTC_USDC/history?period_id=1MIN&time_start=2020-01-01T00:00:00'
+    # url = 'https://rest.coinapi.io/v1/symbols'
+
+    # headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
+    # response = requests.get(url, headers=headers)
+    # data = response.content
+    lis = []
+    f = open('data1.json')
+
+    # returns JSON object as
+    # a dictionary
+    data = json.load(f)
+
+    # Iterating through the json
+    # list
+    for i in data:
+        lis.append(i['symbol_id'])
+
+    # Closing file
+    f.close()
+
+    # df1 = pd.DataFrame([x] for x in lis)
+    # df1.to_excel('symbolid.xlsx')
+    df2 = pd.read_excel('watchlist.xlsx', engine='openpyxl')
+    lis2 = list(df2[0])
+    lis3 = []
+    for x in lis2:
+        if "BINANCE_SPOT_" + x + "_USDT" in lis:
+            lis3.append("BINANCE_SPOT_" + x + "_USDT")
+        elif "KUCOIN_SPOT_" + x + "_USDT" in lis:
+            lis3.append("KUCOIN_SPOT_" + x + "_USDT")
+        elif "FTX_SPOT_" + x + "_USDT" in lis:
+            lis3.append("FTX_SPOT_" + x + "_USDT")
+        elif "COINBASE_SPOT_" + x + "_USDT" in lis:
+            lis3.append("COINBASE_SPOT_" + x + "_USDT")
+        elif "GATEIO_SPOT_" + x + "_USDT" in lis:
+            lis3.append("GATEIO_SPOT_" + x + "_USDT")
+        else:
+            lis3.append("")
+    df1 = pd.DataFrame({'Coin': lis2, 'symbol_id': lis3})
+    df1.to_excel('FinalList.xlsx')
+    return ''
+
+
+def ConvertWatchList():
+    df = pd.read_csv('Watchlist.csv')
+    lis = []
+    for col in df:
+
+        if 'USDT' not in col and 'BUSD' not in col:
+            # print(re.sub(r'^.*?:', '', col[:-3]))
+            lis.append(re.sub(r'^.*?:', '', col[:-3]))
+        else:
+            # print(re.sub(r'^.*?:', '', col[:-4]))
+            lis.append(re.sub(r'^.*?:', '', col[:-4]))
+
+    df1 = pd.DataFrame([x] for x in lis)
+    df1.to_excel('watchlist.xlsx')
+    return 'Success!'
+
+
+@app.route("/getPriceData")
+def getPriceData():
+    # BITSTAMP_SPOT_BTC_USD
+    # region inputs
+    symbol_id = request.args['symbol_id']
+    _date = request.args['date']
+    # endregion
+
+    # region time converions
+    to_date = parser.parse(_date)
+    to_date_str = str(
+        (to_date+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
+    # endregion
+
+    # region API req and OHLC Data save
+    url = 'https://rest.coinapi.io/v1/ohlcv/' + symbol_id + \
+        '/history?period_id=10MIN&time_start='+_date + \
+        '&time_end' + to_date_str + '&limit=144'
+    headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
+    response = requests.get(url, headers=headers)
+    df = pd.read_json(response.content)
+    df.to_excel('OHLC/' + symbol_id + '.xlsx')
+    # endregion
+
+    return response.content
+
+
+@app.route("/calculateSwings")
+def calculateSwings():
+    df = pd.read_excel('OHLC/BITSTAMP_SPOT_BTC_USD.xlsx')
+    df = get_pivots(df)
+    df.to_excel('FINAL.xlsx')
+    return ''
