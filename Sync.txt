@@ -7,6 +7,7 @@ heroku pg:backups:capture -a trade-alert-system
 heroku pg:backups:download -a trade-alert-system
 
  python -m  venv bin/activate.bat
+ .\venv\Scripts\activate
 
 heroku pg:psql postgresql-flexible-57290 --app trade-alert-system
 

@@ -13,12 +13,12 @@ import os
 import requests
 import json
 import pandas as pd
-from customfunctions import get_pivots
-
+from customfunctions import get_pivots, getSwings, getSymbolIds
 
 
 app = Flask(__name__)
 Bootstrap(app)
+app.config['DEBUG'] = True
 # app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123@localhost/postgres"
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL1")
 
@@ -104,6 +104,8 @@ def view():
     for x in H1Result:
         if x not in H1Diff:
             H1Diff.append(x)
+    print(pd.DataFrame(H1Diff, columns=['ticker', 'position', 'timestamp']))
+
     C1H = len(H1Diff)
     #   30M DIFF
     with engine.connect() as con:
@@ -135,6 +137,7 @@ def view():
             H3Diff.append(x)
 
     C3H = len(H3Diff)
+    getSwings('BINANCE_SPOT_ALGO_USDT')
 
     return render_template('view.html', title='Trades', H1Diff=H1Diff, M30Diff=M30Diff, H3Diff=H3Diff, C1H=C1H, C30M=C30M, C3H=C3H)
 
@@ -209,29 +212,33 @@ def getPriceData():
     symbol_id = request.args['symbol_id']
     _date = request.args['date']
     # endregion
+    symbol_list = getSymbolIds()
+    for symbol in symbol_list:
+        symbol_id = symbol
+        # region time converions
+        to_date = parser.parse(_date)
+        to_date_str = str(
+            (to_date+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
+        # endregion
 
-    # region time converions
-    to_date = parser.parse(_date)
-    to_date_str = str(
-        (to_date+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
-    # endregion
-
-    # region API req and OHLC Data save
-    url = 'https://rest.coinapi.io/v1/ohlcv/' + symbol_id + \
-        '/history?period_id=10MIN&time_start='+_date + \
-        '&time_end' + to_date_str + '&limit=144'
-    headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
-    response = requests.get(url, headers=headers)
-    df = pd.read_json(response.content)
-    df.to_excel('OHLC/' + symbol_id + '.xlsx')
-    # endregion
+        # region API req and OHLC Data save
+        url = 'https://rest.coinapi.io/v1/ohlcv/' + symbol_id + \
+            '/history?period_id=10MIN&time_start='+_date + \
+            '&time_end' + to_date_str + '&limit=144'
+        headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
+        response = requests.get(url, headers=headers)
+        df = pd.read_json(response.content)
+        df.to_excel('OHLC/' + symbol_id + '.xlsx')
+        # endregion
 
     return response.content
 
 
 @app.route("/calculateSwings")
 def calculateSwings():
-    df = pd.read_excel('OHLC/BITSTAMP_SPOT_BTC_USD.xlsx')
-    df = get_pivots(df)
-    df.to_excel('FINAL.xlsx')
+    symbol_list = getSymbolIds()
+    for symbol in list(symbol_list):
+        df = pd.read_excel('OHLC/' + symbol + '.xlsx', engine='openpyxl')
+        df = get_pivots(df)
+        df.to_excel('swings/' + symbol + '.xlsx')
     return ''

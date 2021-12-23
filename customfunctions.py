@@ -11,7 +11,7 @@ def get_pivots(df):
     last_pivot_id = 0
     up_down = 0
 
-    diff = .3
+    diff = 0
 
     for i in range(0, len(data)):
         row = data.iloc[i]
@@ -36,6 +36,7 @@ def get_pivots(df):
                     (row.price_high - data.loc[last_pivot_id, 'price_high'])
                 data.loc[last_pivot_id, 'swings'] = np.nan
                 pivot, last_pivot_id = row.price_high, i
+
             elif row.price_low < pivot - diff:
                 data.loc[i, 'swings'] = row.price_low - pivot
                 pivot, last_pivot_id = row.price_low, i
@@ -51,11 +52,25 @@ def get_pivots(df):
                     (row.price_low - data.loc[last_pivot_id, 'price_low'])
                 data.loc[last_pivot_id, 'swings'] = np.nan
                 pivot, last_pivot_id = row.price_low, i
+
             elif row.price_high > pivot - diff:
                 data.loc[i, 'swings'] = row.price_high - pivot
                 pivot, last_pivot_id = row.price_high, i
+
                 # Change the trend indicator
                 up_down = 1
+
     return data
     # print(data)
     # data.to_excel('FINAL.xlsx')
+
+
+def getSymbolIds():
+    df = pd.read_excel('FinalList.xlsx', engine='openpyxl')
+    symbol_list = df['symbol_id']
+    return symbol_list.tolist()
+
+
+def getSwings(symbol: str):
+    df = pd.read_excel('swings/'+symbol+".xlsx", engine='openpyxl')
+    print(df)
