@@ -1,10 +1,16 @@
 import pandas as pd
 import numpy as np
 
+import sqlite3
+import os
 
-def get_pivots(df):
+
+def get_pivots(df, symbol):
     data = df
     data['swings'] = np.nan
+    df_name = pd.read_excel('FinalList.xlsx', engine='openpyxl')
+    data['SymbolDb'] = str(df_name.loc[df_name['symbol_id']
+                                       == symbol, 'SymbolDb'].values[0]).replace(" ", "")
 
     pivot = data.iloc[0].price_open
 
@@ -73,4 +79,14 @@ def getSymbolIds():
 
 def getSwings(symbol: str):
     df = pd.read_excel('swings/'+symbol+".xlsx", engine='openpyxl')
-    print(df)
+    return df
+
+
+def validateTrade(df_trade_1H):
+    conn = sqlite3.connect('test.db')
+    symbolDb = pd.read_excel("FinalList.xlsx", engine='openpyxl')
+    c = conn.cursor()
+
+    # df_trade_1H.to_sql('TradeCall', conn, if_exists='append', index=False)
+    # print(pd.read_sql("select * from TradeCall", conn))
+    # conn.execute("delete from  TradeCall;")

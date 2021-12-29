@@ -1,0 +1,8 @@
+c.execute(
+        """create table SymbolName (Coin TEXT, symbol_id TEXT, SymbolDb TEXT)""")
+symbolDb.to_sql('SymbolName', conn, if_exists='append', index=False)
+
+
+ c.execute(
+        """create table TradeCall (Ticker TEXT, Position TEXT, TimeStamp TEXT)""")
+
