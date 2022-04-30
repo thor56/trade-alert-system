@@ -6,3 +6,8 @@ symbolDb.to_sql('SymbolName', conn, if_exists='append', index=False)
  c.execute(
         """create table TradeCall (Ticker TEXT, Position TEXT, TimeStamp TEXT)""")
 
+
+c.execute(
+        """create table SwingTable (time_period_start TEXT, time_period_end TEXT, time_open TEXT, time_close TEXT,
+		price_open REAL, price_high REAL, price_low REAL, price_close REAL,
+		volume_traded REAL, trades_count REAL, swings REAL, SymbolDb TEXT)""")

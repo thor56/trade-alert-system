@@ -14,7 +14,6 @@ import requests
 import json
 import pandas as pd
 from customfunctions import get_pivots, getSwings, getSymbolIds, validateTrade
-from flask import Response
 
 
 app = Flask(__name__)
@@ -141,7 +140,7 @@ def view():
     df_trade_1H = pd.DataFrame(
         H1Diff, columns=['ticker', 'position', 'timestamp'])
 
-    # validateTrade(df_trade_1H)
+    validateTrade(df_trade_1H)
 
     return render_template('view.html', title='Trades', H1Diff=H1Diff, M30Diff=M30Diff, H3Diff=H3Diff, C1H=C1H, C30M=C30M, C3H=C3H)
 
@@ -217,35 +216,49 @@ def getPriceData():
     _date = request.args['date']
     # endregion
     symbol_list = getSymbolIds()
-    # for symbol in symbol_list:
-    #     symbol_id = symbol
-    #     # region time converions
-    #     to_date = parser.parse(_date)
-    #     to_date_str = str(
-    #         (to_date+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
-    #     # endregion
+    for symbol in symbol_list:
+        symbol_id = symbol
+        # region time converions
+        to_date = parser.parse(_date)
+        to_date_str = str(
+            (to_date+timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S.%f%z'))
+        # endregion
 
-    #     # region API req and OHLC Data save
-    #     url = 'https://rest.coinapi.io/v1/ohlcv/' + symbol_id + \
-    #         '/history?period_id=10MIN&time_start='+_date + \
-    #         '&time_end' + to_date_str + '&limit=144'
-    #     headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
-    #     response = requests.get(url, headers=headers)
-    #     print(response.content)
-    # df = pd.read_json(response.content)
-    # if not os.path.exists('OHLC/' + str(_date)):
-    #     os.makedirs('OHLC/' + str(_date))
+        # region API req and OHLC Data save
+        url = 'https://rest.coinapi.io/v1/ohlcv/' + symbol_id + \
+            '/history?period_id=10MIN&time_start='+_date + \
+            '&time_end' + to_date_str + '&limit=144'
 
-    # df.to_excel('OHLC/' + str(_date) + '/' + symbol_id + '.xlsx')
+        #   anima@
+        headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
+        #   ran598
+        # headers = {'X-CoinAPI-Key': 'E635958C-2CCA-43EE-B3E1-EB22AF831D0F'}
+        # headers = {'X-CoinAPI-Key': '8C05335A-ED7E-47F1-A949-C3856592155A'}
+        #   # tcfu
+        # headers = {'X-CoinAPI-Key': 'DB2795F5-14D0-46BC-9AE7-41E1A5F16A64'}
+        #   # tech2
+        # headers = {'X-CoinAPI-Key': '9B6D3727-F3E4-4319-B4D3-A1FA93D09C14'}
+        #   # sujan
+
+        response = requests.get(url, headers=headers)
+        df = pd.read_json(response.content)
+        if not os.path.exists('OHLC/' + str(_date)):
+            os.makedirs('OHLC/' + str(_date))
+
+        df.to_excel('OHLC/' + str(_date) + '/' + symbol_id + '.xlsx')
     # endregion
-    url = 'https://rest.coinapi.io/v1/assets'
-    headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}
-    response = requests.get(url, headers=headers)
+    # url = 'https://rest.coinapi.io/v1/assets'
+    # headers = {'X-CoinAPI-Key': '08F2D382-58E3-49B0-8B6F-CB20DD06DE17'}  # anima@
+    # headers = {'X-CoinAPI-Key': 'E635958C-2CCA-43EE-B3E1-EB22AF831D0F'}  # ran598
+    # headers = {'X-CoinAPI-Key': '8C05335A-ED7E-47F1-A949-C3856592155A'}  # tcfu
+    # headers = {'X-CoinAPI-Key': 'DB2795F5-14D0-46BC-9AE7-41E1A5F16A64'}  # tech2
+    # headers = {'X-CoinAPI-Key': '9B6D3727-F3E4-4319-B4D3-A1FA93D09C14'}  # sujan
 
+    response = requests.get(url, headers=headers)
     return str(response.headers)
 
 
-@app.route("/calculateSwings")
+@ app.route("/calculateSwings")
 def calculateSwings():
     symbol_list = getSymbolIds()
     for symbol in list(symbol_list):
